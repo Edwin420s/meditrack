@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const connectDB = require('./config/db');
+const cors = require('cors');
 const socketio = require('socket.io');
 const http = require('http');
 
@@ -34,15 +34,15 @@ io.on('connection', (socket) => {
   });
 });
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/appointments', require('./routes/appointments'));
-
 // Inject io into request object
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
+
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/appointments', require('./routes/appointments'));
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
