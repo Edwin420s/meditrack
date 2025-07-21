@@ -1,0 +1,35 @@
+/* client/src/styles/auth.css */
+
+:root {
+  --bg-light: #f7fafc;
+  --text-dark: #2d3748;
+  --primary-color: #3182ce;
+  --error-bg: #fed7d7;
+  --error-text: #c53030;
+  --input-border: #e2e8f0;
+}
+
+/* Page Layout */
+.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--bg-light);
+}
+
+/* Container for auth forms (login/register) */
+.auth-container {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* Optional: additional styles for responsiveness */
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 1rem;
+  }
+}
