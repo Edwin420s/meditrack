@@ -34,7 +34,10 @@ const Login = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#f9fbf8] px-4 overflow-x-hidden" style={{ fontFamily: 'Lexend, "Noto Sans", sans-serif' }}>
+    <div
+      className="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#f9fbf8] px-4 overflow-x-hidden"
+      style={{ fontFamily: 'Lexend, "Noto Sans", sans-serif' }}
+    >
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
         <h1 className="text-3xl font-bold text-center text-blue-600">MediTrack</h1>
         <h2 className="mt-2 text-center text-xl font-semibold text-gray-800">

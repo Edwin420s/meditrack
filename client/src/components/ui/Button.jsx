@@ -1,7 +1,5 @@
 // client/src/components/ui/Button.jsx
 
-import './Button.css';
-
 const Button = ({
   children,
   type = 'button',
@@ -10,11 +8,18 @@ const Button = ({
   className = '',
   ...props
 }) => {
+  const baseClasses = "font-medium py-2 px-4 rounded-md transition duration-200 focus:outline-none";
+  const variantClasses = {
+    primary: "bg-primary text-white hover:bg-primary-dark",
+    secondary: "bg-secondary text-white hover:bg-secondary-dark",
+    outline: "border border-primary text-primary hover:bg-primary-light hover:text-white",
+  };
+
   return (
     <button
       type={type}
       onClick={onClick}
-      className={`button button-${variant} ${className}`}
+      className={`${baseClasses} ${variantClasses[variant] || ''} ${className}`}
       {...props}
     >
       {children}
