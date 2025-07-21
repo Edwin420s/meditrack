@@ -10,13 +10,26 @@ const SocketManager = () => {
   useEffect(() => {
     if (!user) return;
 
-    const socket = io('http://localhost:5000', {
-      query: { userId: user._id }, // Optional: attach userId for server-side filtering
+    const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+      auth: {
+        token: localStorage.getItem('token'),
+      },
+      query: {
+        userId: user._id, // Optional: useful for identifying user on server
+      },
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ Connected to socket server');
     });
 
     socket.on('appointment_update', (appointment) => {
-      console.log('✅ Appointment update received:', appointment);
-      // TODO: Update app state or notify user via toast/snackbar
+      console.log('📅 Appointment update received:', appointment);
+      // TODO: Dispatch Redux/state update or show toast/snackbar
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Disconnected from socket server');
     });
 
     return () => {
@@ -24,7 +37,7 @@ const SocketManager = () => {
     };
   }, [user]);
 
-  return null; // No UI is rendered
+  return null;
 };
 
 export default SocketManager;

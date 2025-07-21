@@ -5,7 +5,7 @@ import api from '../services/api';
 const DoctorDashboard = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notes, setNotes] = useState({}); // Use object to manage multiple notes
+  const [notes, setNotes] = useState({});
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -13,9 +13,10 @@ const DoctorDashboard = () => {
         const res = await api.get('/api/appointments');
         setAppointments(res.data);
       } catch (err) {
-        console.error(err);
+        console.error('Error fetching appointments:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchAppointments();
@@ -24,11 +25,11 @@ const DoctorDashboard = () => {
   const handleUpdateStatus = async (id, status) => {
     try {
       const res = await api.put(`/api/appointments/${id}`, { status });
-      setAppointments(appointments.map(app =>
-        app._id === id ? res.data : app
-      ));
+      setAppointments(prev =>
+        prev.map(app => (app._id === id ? res.data : app))
+      );
     } catch (err) {
-      console.error(err);
+      console.error('Error updating status:', err);
     }
   };
 
@@ -38,12 +39,12 @@ const DoctorDashboard = () => {
 
     try {
       const res = await api.put(`/api/appointments/${id}`, { notes: note });
-      setAppointments(appointments.map(app =>
-        app._id === id ? res.data : app
-      ));
+      setAppointments(prev =>
+        prev.map(app => (app._id === id ? res.data : app))
+      );
       setNotes(prev => ({ ...prev, [id]: '' }));
     } catch (err) {
-      console.error(err);
+      console.error('Error adding notes:', err);
     }
   };
 
@@ -52,38 +53,45 @@ const DoctorDashboard = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-10">Loading appointments...</div>;
+    return (
+      <div className="max-w-4xl mx-auto p-6 text-center text-lg font-medium">
+        Loading appointments...
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Doctor Dashboard</h1>
+    <div className="max-w-6xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Doctor Dashboard</h1>
 
-      <div className="mb-6">
+      <div className="bg-white rounded-lg shadow-md p-4">
         <h2 className="text-xl font-semibold mb-4">Appointment Queue</h2>
+
         {appointments.length === 0 ? (
           <p className="text-gray-600">No appointments scheduled</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {appointments.map(appointment => (
-              <div key={appointment._id}>
+              <div key={appointment._id} className="border-b pb-4">
                 <AppointmentCard
                   appointment={appointment}
                   onUpdate={handleUpdateStatus}
                   isDoctor={true}
                 />
 
-                <div className="mt-2 flex">
+                <div className="mt-3 flex">
                   <input
                     type="text"
                     value={notes[appointment._id] || ''}
-                    onChange={(e) => handleNoteChange(appointment._id, e.target.value)}
+                    onChange={(e) =>
+                      handleNoteChange(appointment._id, e.target.value)
+                    }
                     placeholder="Add visit notes"
-                    className="flex-grow px-3 py-1 border rounded-l"
+                    className="flex-grow px-3 py-2 border border-gray-300 rounded-l focus:outline-none focus:ring"
                   />
                   <button
                     onClick={() => handleAddNotes(appointment._id)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded-r hover:bg-blue-600"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700 transition"
                   >
                     Add Notes
                   </button>

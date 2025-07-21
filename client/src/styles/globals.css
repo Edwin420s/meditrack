@@ -1,0 +1,94 @@
+/* Colors */
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #e11d48;
+  --background: #f8fafc;
+  --text: #1e293b;
+  --text-light: #64748b;
+}
+
+/* Layout */
+.dashboard {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.main-content {
+  padding: 2rem;
+  background: var(--background);
+}
+
+/* Cards */
+.appointment-card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.doctor-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.doctor-card.selected {
+  border-color: var(--primary);
+  background-color: #eff6ff;
+}
+
+/* Buttons */
+.primary-btn {
+  background: var(--primary);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.primary-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* Table */
+.appointment-queue {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.appointment-queue th {
+  text-align: left;
+  padding: 1rem;
+  background: #f1f5f9;
+}
+
+.appointment-queue td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.served {
+  background: #d1fae5;
+  color: #065f46;
+}

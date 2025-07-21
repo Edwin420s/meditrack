@@ -1,14 +1,14 @@
-// App.js
+// client/src/App.js
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import DoctorDashboard from './pages/DoctorDashboard';
+import Navbar from './components/layout/Navbar';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import PatientDashboard from './pages/patient/Dashboard';
+import DoctorDashboard from './pages/doctor/Dashboard';
+import PrivateRoute from './components/layout/PrivateRoute';
 import SocketManager from './components/SocketManager';
-import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
@@ -17,18 +17,27 @@ function App() {
       <SocketManager />
       <div className="container mx-auto px-4 py-8">
         <Routes>
+          {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          } />
-          <Route path="/doctor" element={
-            <PrivateRoute roles={['doctor']}>
-              <DoctorDashboard />
-            </PrivateRoute>
-          } />
+
+          {/* Protected Routes */}
+          <Route
+            path="/"
+            element={
+              <PrivateRoute roles={['patient', 'doctor']}>
+                <PatientDashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/doctor"
+            element={
+              <PrivateRoute roles={['doctor']}>
+                <DoctorDashboard />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </div>
     </AuthProvider>
