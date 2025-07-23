@@ -7,7 +7,6 @@
 ## 🔗 Live Demo
 
 👉 [Live Website](https://your-live-demo-link.com)  
-*(Replace with actual deployment URL)*
 
 ---
 
