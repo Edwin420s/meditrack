@@ -5,3 +5,4 @@ build/
 -e "node_modules/\n.env\n.env.local" 
 -e "node_modules/\n.env\n.env.local" 
 -e "node_modules/\n.env\n.env.local" 
+-e "node_modules/\n.env\n.env.local" 

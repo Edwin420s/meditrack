@@ -1,6 +1,7 @@
+// src/pages/auth/Register.jsx
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';   
+import { useAuth } from '../../context/AuthContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -13,11 +14,14 @@ const Register = () => {
   });
 
   const [error, setError] = useState('');
-  const { register } = useAuth();
+  const { register } = useAuth(); // Ensure register expects an object
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -30,14 +34,15 @@ const Register = () => {
     }
 
     try {
-      const user = await register(
-        formData.name,
-        formData.email,
-        formData.password,
-        formData.role,
-        formData.phone
-      );
+      const user = await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        phone: formData.phone
+      });
 
+      // Navigate based on role
       if (user?.role === 'doctor') {
         navigate('/doctor');
       } else {
@@ -45,6 +50,7 @@ const Register = () => {
       }
     } catch (err) {
       setError('Registration failed. Please try again.');
+      console.error('Registration error:', err);
     }
   };
 
@@ -134,6 +140,7 @@ const Register = () => {
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-300"
             required
+            minLength={6}
           />
         </div>
 
@@ -149,6 +156,7 @@ const Register = () => {
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-300"
             required
+            minLength={6}
           />
         </div>
 

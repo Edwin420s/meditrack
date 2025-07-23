@@ -12,13 +12,17 @@ const PrivateRoute = ({ children, roles = [] }) => {
   }
 
   if (!user) {
+    // Redirect to login if not authenticated
     return <Navigate to="/login" replace />;
   }
 
-  if (roles.length && !roles.includes(user.role)) {
+  // If roles are specified, check if user's role is allowed
+  if (roles.length > 0 && !roles.includes(user.role)) {
+    // Redirect to home if user role is unauthorized for the route
     return <Navigate to="/" replace />;
   }
 
+  // Authorized: render children components
   return children;
 };
 

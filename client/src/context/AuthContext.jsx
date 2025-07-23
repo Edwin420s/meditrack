@@ -1,5 +1,4 @@
 // client/src/context/AuthContext.jsx
-
 import {
   createContext,
   useState,
@@ -7,18 +6,19 @@ import {
   useContext,
   useCallback,
 } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import jwt from 'jsonwebtoken';
+import { jwtDecode } from 'jwt-decode'; // ✅ FIXED: use named import
 
 const AuthContext = createContext();
 
-// Helper: Validate JWT expiry
+// ✅ Utility: Check if token is valid
 const isTokenValid = (token) => {
   if (!token) return false;
   try {
-    const decoded = jwt.decode(token);
+    const decoded = jwtDecode(token); // ✅ FIXED: use jwtDecode here
     return decoded?.exp > Date.now() / 1000;
-  } catch (err) {
+  } catch {
     return false;
   }
 };
@@ -26,16 +26,21 @@ const isTokenValid = (token) => {
 export const AuthProvider = ({ children, persist = true }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  // Set token into localStorage and Axios headers
-  const setToken = useCallback((token) => {
-    if (persist) {
-      localStorage.setItem('token', token);
-    }
-    api.defaults.headers.common['x-auth-token'] = token;
-  }, [persist]);
+  // ✅ Set token in localStorage and Axios
+  const setToken = useCallback(
+    (token) => {
+      if (persist) {
+        localStorage.setItem('token', token);
+      }
+      api.defaults.headers.common['x-auth-token'] = token;
+    },
+    [persist]
+  );
 
-  // Remove token from storage and headers
+  // ✅ Remove token from storage and Axios
   const removeToken = useCallback(() => {
     if (persist) {
       localStorage.removeItem('token');
@@ -43,7 +48,14 @@ export const AuthProvider = ({ children, persist = true }) => {
     delete api.defaults.headers.common['x-auth-token'];
   }, [persist]);
 
-  // Load user if token exists and is valid
+  // ✅ Logout
+  const logout = useCallback(() => {
+    removeToken();
+    setUser(null);
+    navigate('/login');
+  }, [removeToken, navigate]);
+
+  // ✅ Load user if token is valid
   const loadUser = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token || !isTokenValid(token)) {
@@ -53,8 +65,12 @@ export const AuthProvider = ({ children, persist = true }) => {
 
     try {
       setToken(token);
-      const res = await api.get('/api/auth/user');
-      setUser(res.data);
+      const res = await api.get('/auth/user');
+      if (res.data.success) {
+        setUser(res.data.user);
+      } else {
+        removeToken();
+      }
     } catch (err) {
       console.error('❌ Failed to load user:', err);
       removeToken();
@@ -63,77 +79,83 @@ export const AuthProvider = ({ children, persist = true }) => {
     }
   }, [setToken, removeToken]);
 
-  // Check token expiry every 60s and logout if expired
-  useEffect(() => {
-    const checkTokenExpiry = () => {
-      const token = localStorage.getItem('token');
-      if (token && !isTokenValid(token)) {
-        logout();
-      }
-    };
-    const interval = setInterval(checkTokenExpiry, 60000);
-    return () => clearInterval(interval);
-  }, [removeToken]);
-
+  // ⏳ Load on component mount
   useEffect(() => {
     loadUser();
   }, [loadUser]);
 
-  // Login
-  const login = async (email, password) => {
-    try {
-      const res = await api.post('/api/auth/login', { email, password });
-      if (res.data?.token) {
-        setToken(res.data.token);
-        setUser(res.data.user);
-        return res.data.user;
+  // 🔄 Auto logout on token expiry every 60s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const token = localStorage.getItem('token');
+      if (token && !isTokenValid(token)) {
+        logout();
       }
-      throw new Error('Invalid response from server');
-    } catch (err) {
-      console.error('🔐 Login failed:', err);
-      removeToken();
-      throw err.response?.data?.message || 'Login failed';
-    }
-  };
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [logout]);
 
-  // Register
-  const register = async (name, email, password, role, phone) => {
+  // ✅ Register
+  const register = async (formData) => {
     try {
-      const res = await api.post('/api/auth/register', {
-        name,
-        email,
-        password,
-        role,
-        phone,
+      setError(null);
+      const response = await api.post('/auth/register', formData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
-      if (res.data?.token) {
-        setToken(res.data.token);
-        setUser(res.data.user);
-        return res.data.user;
+
+      if (response.data.token) {
+        setToken(response.data.token);
+        setUser(response.data.user);
+        navigate('/dashboard');
       }
-      throw new Error('Invalid response from server');
+
+      return response.data;
     } catch (err) {
-      console.error('📝 Registration failed:', err);
+      const errorMsg = err.response?.data?.message || 'Registration failed';
+      setError(errorMsg);
+      console.error('Registration error:', err.response?.data || err.message);
       removeToken();
-      throw err.response?.data?.message || 'Registration failed';
+      throw new Error(errorMsg);
     }
   };
 
-  // Logout
-  const logout = () => {
-    removeToken();
-    setUser(null);
+  // ✅ Login
+  const login = async (formData) => {
+    try {
+      setError(null);
+      const res = await api.post('/auth/login', formData);
+
+      if (res.data.success && res.data.token) {
+        setToken(res.data.token);
+        setUser(res.data.user);
+        navigate('/dashboard');
+        return res.data;
+      }
+
+      throw new Error(res.data.message || 'Login failed');
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || err.message || 'Login failed';
+      setError(errorMsg);
+      removeToken();
+      throw new Error(errorMsg);
+    }
   };
 
-  // Refresh user (e.g. after an update)
+  // 🔁 Manual user refresh
   const refreshUser = async () => {
     try {
-      const res = await api.get('/api/auth/user');
-      setUser(res.data);
-      return res.data;
+      const res = await api.get('/auth/user');
+      if (res.data.success) {
+        setUser(res.data.user);
+        return res.data.user;
+      }
+      throw new Error(res.data.message || 'Failed to refresh user');
     } catch (err) {
       console.error('🔁 Failed to refresh user:', err);
       logout();
+      throw err;
     }
   };
 
@@ -142,6 +164,7 @@ export const AuthProvider = ({ children, persist = true }) => {
       value={{
         user,
         loading,
+        error,
         login,
         register,
         logout,
@@ -153,7 +176,7 @@ export const AuthProvider = ({ children, persist = true }) => {
   );
 };
 
-// Hook for consuming the context
+// ✅ Custom hook for consuming context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

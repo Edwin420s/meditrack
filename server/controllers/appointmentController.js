@@ -1,5 +1,5 @@
+// controllers/appointmentController.js
 const Appointment = require('../models/Appointment');
-const User = require('../models/User');
 
 exports.createAppointment = async (req, res) => {
   const { datetime, reason } = req.body;
@@ -13,7 +13,6 @@ exports.createAppointment = async (req, res) => {
 
     const appointment = await newAppointment.save();
     
-    // Emit real-time update
     req.io.emit('new_appointment', appointment);
     
     res.json(appointment);
@@ -55,7 +54,6 @@ exports.updateAppointment = async (req, res) => {
     
     const updatedAppointment = await appointment.save();
     
-    // Emit real-time update
     req.io.emit('appointment_update', updatedAppointment);
     
     res.json(updatedAppointment);

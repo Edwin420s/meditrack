@@ -19,7 +19,7 @@ const PatientDashboard = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await api.get('/api/appointments');
+        const res = await api.get('/appointments');  // <-- fixed here
         setAppointments(res.data);
       } catch (err) {
         console.error('❌ Failed to fetch appointments:', err);
@@ -43,7 +43,7 @@ const PatientDashboard = () => {
     setError('');
 
     try {
-      const res = await api.post('/api/appointments', formData);
+      const res = await api.post('/appointments', formData);  // <-- fixed here
       setAppointments([res.data, ...appointments]);
       setFormData({ datetime: '', reason: '' });
     } catch (err) {

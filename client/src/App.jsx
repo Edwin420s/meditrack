@@ -1,5 +1,3 @@
-// client/src/App.jsx
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -9,8 +7,10 @@ import Navbar from './components/Navbar';
 import SocketManager from './components/SocketManager';
 import PrivateRoute from './components/PrivateRoute';
 
+import Home from './pages/Home';  // <- public landing page
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 
@@ -26,18 +26,21 @@ function App() {
         <SocketManager />
         <div className="container mx-auto px-4 py-8">
           <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
+            {/* Protected routes */}
             <Route
-              path="/"
+              path="/dashboard"
               element={
                 <PrivateRoute>
                   <Dashboard />
                 </PrivateRoute>
               }
             />
-
             <Route
               path="/doctor"
               element={

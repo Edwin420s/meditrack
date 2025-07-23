@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
-import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import Badge from '../ui/Badge';
+import Input from '../ui/Input';
+import api from '../../services/api';
 
-export default function DoctorQueue() {
+
+const DoctorQueue = () => {
   const [appointments, setAppointments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [marking, setMarking] = useState({}); // Track per-appointment loading
 
+  // Fetch appointments
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -14,88 +19,108 @@ export default function DoctorQueue() {
         setAppointments(res.data);
       } catch (error) {
         console.error('Error fetching appointments:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchAppointments();
   }, []);
 
-  const handleMarkAsServed = async (id) => {
+  // Mark as served
+  const handleServe = async (appointmentId) => {
+    setMarking((prev) => ({ ...prev, [appointmentId]: true }));
     try {
-      await api.put(`/api/appointments/${id}`, { status: 'served' });
+      await api.put(`/appointments/${appointmentId}/serve`);
       setAppointments((prev) =>
         prev.map((appt) =>
-          appt._id === id ? { ...appt, status: 'served' } : appt
+          appt._id === appointmentId ? { ...appt, status: 'served' } : appt
         )
       );
     } catch (error) {
-      console.error('Error updating appointment:', error);
+      console.error('Error serving appointment:', error);
+    } finally {
+      setMarking((prev) => ({ ...prev, [appointmentId]: false }));
     }
   };
 
+  // Filter logic
+  const lowerSearch = searchTerm.toLowerCase();
   const filteredAppointments = appointments
     .filter((appt) =>
-      appt.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (appt.patient.mrn &&
-        appt.patient.mrn.toLowerCase().includes(searchTerm.toLowerCase()))
+      appt.patient.name.toLowerCase().includes(lowerSearch) ||
+      (appt.patient.mrn && appt.patient.mrn.toLowerCase().includes(lowerSearch))
     )
-    .sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
+    .sort(
+      (a, b) =>
+        new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
 
   return (
-    <div className="doctor-queue p-4 bg-white shadow rounded">
-      <h2 className="text-xl font-semibold mb-4">Appointment Queue</h2>
+    <div className="space-y-4">
+      <Input
+        type="text"
+        placeholder="Search by name or MRN"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        aria-label="Search appointments by patient name or MRN"
+        className="w-full max-w-md"
+      />
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search by patient name or MRN"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
-        />
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-gray-100">
+      <div className="overflow-x-auto rounded-lg border shadow-sm">
+        <table className="min-w-full table-auto text-left text-sm">
+          <thead className="bg-gray-100 text-gray-700">
             <tr>
-              <th className="px-4 py-2 text-left">Patient Name</th>
-              <th className="px-4 py-2 text-left">Date / Time</th>
-              <th className="px-4 py-2 text-left">Reason</th>
-              <th className="px-4 py-2 text-left">Status</th>
-              <th className="px-4 py-2 text-left">Actions</th>
+              <th className="px-4 py-2">Patient</th>
+              <th className="px-4 py-2">Time</th>
+              <th className="px-4 py-2">Reason</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredAppointments.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="5" className="text-center py-4 text-gray-500">
+                  Loading appointments...
+                </td>
+              </tr>
+            ) : filteredAppointments.length === 0 ? (
               <tr>
                 <td colSpan="5" className="text-center py-4 text-gray-500">
                   No appointments found.
                 </td>
               </tr>
             ) : (
-              filteredAppointments.map((appointment) => (
-                <tr
-                  key={appointment._id}
-                  className="border-t border-gray-200 hover:bg-gray-50"
-                >
-                  <td className="px-4 py-2">{appointment.patient.name}</td>
+              filteredAppointments.map((appt) => (
+                <tr key={appt._id} className="border-t">
+                  <td className="px-4 py-2">{appt.patient.name}</td>
                   <td className="px-4 py-2">
-                    {new Date(appointment.datetime).toLocaleString()}
+                    {new Date(appt.datetime).toLocaleString()}
                   </td>
-                  <td className="px-4 py-2">{appointment.reason}</td>
+                  <td className="px-4 py-2">{appt.reason}</td>
                   <td className="px-4 py-2">
-                    <Badge status={appointment.status}>
-                      {appointment.status}
+                    <Badge
+                      className={`${
+                        appt.status === 'served'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-yellow-100 text-yellow-700'
+                      }`}
+                    >
+                      {appt.status}
                     </Badge>
                   </td>
                   <td className="px-4 py-2">
-                    {appointment.status === 'pending' && (
+                    {appt.status !== 'served' ? (
                       <Button
-                        size="small"
-                        onClick={() => handleMarkAsServed(appointment._id)}
+                        size="sm"
+                        onClick={() => handleServe(appt._id)}
+                        disabled={marking[appt._id]}
+                        className="bg-blue-600 text-white hover:bg-blue-700"
                       >
-                        Mark as Served
+                        {marking[appt._id] ? 'Marking...' : 'Mark as Served'}
                       </Button>
+                    ) : (
+                      <span className="text-sm text-gray-500">Done</span>
                     )}
                   </td>
                 </tr>
@@ -106,4 +131,6 @@ export default function DoctorQueue() {
       </div>
     </div>
   );
-}
+};
+
+export default DoctorQueue;

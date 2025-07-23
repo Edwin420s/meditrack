@@ -1,48 +1,57 @@
+// server.js (or app.js)
 require('dotenv').config();
-const express = require('express');
-const connectDB = require('./config/db');
-const cors = require('cors');
-const socketio = require('socket.io');
-const http = require('http');
 
-// Connect to database
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const socketio = require('socket.io');
+const connectDB = require('./config/db');
+
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
+
 const io = socketio(server, {
   cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  },
 });
 
-// Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+}));
+
 app.use(express.json());
-app.use(cors());
+app.use(express.urlencoded({ extended: true }));
 
-// Socket.io
-io.on('connection', (socket) => {
-  console.log('New client connected');
-  
-  socket.on('new_appointment', (appointment) => {
-    io.emit('appointment_update', appointment);
-  });
-  
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-});
-
-// Inject io into request object
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
-// Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/appointments', require('./routes/appointments'));
 
+io.on('connection', (socket) => {
+  console.log('🟢 New client connected:', socket.id);
+
+  socket.on('new_appointment', (appointment) => {
+    console.log('📅 New appointment received:', appointment);
+    io.emit('appointment_update', appointment);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔴 Client disconnected:', socket.id);
+  });
+});
+
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
