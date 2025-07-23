@@ -1,28 +1,32 @@
 // client/src/components/layout/PrivateRoute.jsx
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const PrivateRoute = ({ children, roles = [] }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
-    return <div className="text-center py-10">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-500 text-lg">Loading...</p>
+      </div>
+    );
   }
 
   if (!user) {
-    // Redirect to login if not authenticated
-    return <Navigate to="/login" replace />;
+    // User not authenticated, redirect to login
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If roles are specified, check if user's role is allowed
   if (roles.length > 0 && !roles.includes(user.role)) {
-    // Redirect to home if user role is unauthorized for the route
-    return <Navigate to="/" replace />;
+    // User authenticated but doesn't have the required role
+    return <Navigate to="/unauthorized" replace />;
   }
 
-  // Authorized: render children components
+  // User authenticated and authorized
   return children;
 };
 

@@ -19,7 +19,9 @@ const AppointmentCard = ({
         </div>
         <div className="card-body">
           <h4 className="text-md font-bold">{doctor}</h4>
-          <p className="text-gray-600">{specialty} | {location}</p>
+          <p className="text-gray-600">
+            {specialty} | {location}
+          </p>
         </div>
         <div className="card-footer mt-4">
           <button className="border px-4 py-1 rounded text-sm hover:bg-gray-100">

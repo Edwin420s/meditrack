@@ -1,4 +1,3 @@
-// client/src/pages/auth/Login.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -10,7 +9,7 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -24,7 +23,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(formData);  // <-- pass whole formData here!
+      const response = await login(formData); // Make sure login returns response with token
+      // Save token to localStorage here:
+      if (response?.token) {
+        localStorage.setItem('token', response.token);
+      }
       navigate('/dashboard');
     } catch (err) {
       setError('Invalid credentials. Please try again.');
@@ -36,7 +39,7 @@ const Login = () => {
       <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">MediTrack</h1>
         <h2 className="text-xl text-center text-gray-600 mb-6">Login to your account</h2>
-        
+
         {error && (
           <div className="mb-4 text-sm text-red-600 text-center">
             {error}
@@ -72,14 +75,15 @@ const Login = () => {
               type="button"
               className="absolute right-3 top-8 text-gray-500 hover:text-gray-700"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? 'Hide' : 'Show'}
             </button>
           </div>
 
           <div className="flex justify-end">
-            <Link 
-              to="/forgot-password" 
+            <Link
+              to="/forgot-password"
               className="text-sm text-green-600 hover:underline"
             >
               Forgot password?

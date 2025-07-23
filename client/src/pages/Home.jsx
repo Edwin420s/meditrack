@@ -1,8 +1,34 @@
 // client/src/pages/Home.jsx
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLoginChange = (e) => {
+    setLoginData({
+      ...loginData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await login(loginData.email, loginData.password);
+      navigate('/dashboard');
+    } catch (err) {
+      setError('Invalid credentials. Please try again.');
+    }
+  };
+
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-[#f9fbf8] overflow-x-hidden"
@@ -49,12 +75,12 @@ const Home = () => {
             </Link>
           </div>
           <div className="flex gap-2">
-            <Link
-              to="/login"
+            <button
+              onClick={() => setShowLoginModal(true)}
               className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#4fdf1f] text-[#111b0e] text-sm font-bold leading-normal tracking-[0.015em]"
             >
               <span className="truncate">Login</span>
-            </Link>
+            </button>
             <Link
               to="/register"
               className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaf3e8] text-[#111b0e] text-sm font-bold leading-normal tracking-[0.015em]"
@@ -87,12 +113,12 @@ const Home = () => {
                   </h2>
                 </div>
                 <div className="flex-wrap gap-3 flex justify-center">
-                  <Link
-                    to="/login"
+                  <button
+                    onClick={() => setShowLoginModal(true)}
                     className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#4fdf1f] text-[#111b0e] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
                   >
                     <span className="truncate">Login</span>
-                  </Link>
+                  </button>
                   <Link
                     to="/register"
                     className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#eaf3e8] text-[#111b0e] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]"
@@ -105,6 +131,99 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-[#111b0e]">
+                Login to your account
+              </h2>
+              <button
+                onClick={() => {
+                  setShowLoginModal(false);
+                  setError('');
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            {error && (
+              <div className="mb-4 text-sm text-red-600">{error}</div>
+            )}
+
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={loginData.email}
+                  onChange={handleLoginChange}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4fdf1f]"
+                  required
+                />
+              </div>
+
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={loginData.password}
+                  onChange={handleLoginChange}
+                  placeholder="Enter your password"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#4fdf1f]"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-8 text-gray-500 hover:text-gray-700"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
+
+              <div className="flex justify-end">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-[#4fdf1f] hover:underline"
+                  onClick={() => setShowLoginModal(false)}
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-[#4fdf1f] text-[#111b0e] py-2 px-4 rounded-md hover:bg-[#45c71a] focus:outline-none focus:ring-2 focus:ring-[#4fdf1f] font-bold"
+              >
+                Login
+              </button>
+            </form>
+
+            <div className="mt-4 text-center text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                className="text-[#4fdf1f] hover:underline"
+                onClick={() => setShowLoginModal(false)}
+              >
+                Register
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

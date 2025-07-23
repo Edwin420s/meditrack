@@ -1,3 +1,5 @@
+// client/src/App.jsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -5,14 +7,15 @@ import { AuthProvider } from './context/AuthContext';
 
 import Navbar from './components/Navbar';
 import SocketManager from './components/SocketManager';
-import PrivateRoute from './components/PrivateRoute';
+import PrivateRoute from './components/layout/PrivateRoute';
 
-import Home from './pages/Home';  // <- public landing page
+import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
-import Dashboard from './pages/Dashboard';
-import DoctorDashboard from './pages/DoctorDashboard';
+
+import PatientDashboard from './pages/patient/Dashboard';
+import DoctorDashboard from './pages/doctor/Dashboard';
 
 import './styles/theme.css';
 import './styles/globals.css';
@@ -22,27 +25,30 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Navbar />
         <SocketManager />
+        <Navbar />
+
         <div className="container mx-auto px-4 py-8">
           <Routes>
-            {/* Public routes */}
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* Protected routes */}
+            {/* Patient Protected Route */}
             <Route
-              path="/dashboard"
+              path="/patient/dashboard"
               element={
-                <PrivateRoute>
-                  <Dashboard />
+                <PrivateRoute roles={['patient']}>
+                  <PatientDashboard />
                 </PrivateRoute>
               }
             />
+
+            {/* Doctor Protected Route */}
             <Route
-              path="/doctor"
+              path="/doctor/dashboard"
               element={
                 <PrivateRoute roles={['doctor']}>
                   <DoctorDashboard />

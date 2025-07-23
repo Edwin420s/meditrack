@@ -1,4 +1,3 @@
-// client/src/context/AuthContext.jsx
 import {
   createContext,
   useState,
@@ -8,15 +7,15 @@ import {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import { jwtDecode } from 'jwt-decode'; // ✅ FIXED: use named import
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
-// ✅ Utility: Check if token is valid
+// ✅ Utility: Check token validity
 const isTokenValid = (token) => {
   if (!token) return false;
   try {
-    const decoded = jwtDecode(token); // ✅ FIXED: use jwtDecode here
+    const decoded = jwtDecode(token);
     return decoded?.exp > Date.now() / 1000;
   } catch {
     return false;
@@ -29,7 +28,7 @@ export const AuthProvider = ({ children, persist = true }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ Set token in localStorage and Axios
+  // ✅ Set token globally
   const setToken = useCallback(
     (token) => {
       if (persist) {
@@ -40,7 +39,7 @@ export const AuthProvider = ({ children, persist = true }) => {
     [persist]
   );
 
-  // ✅ Remove token from storage and Axios
+  // ✅ Remove token
   const removeToken = useCallback(() => {
     if (persist) {
       localStorage.removeItem('token');
@@ -55,7 +54,7 @@ export const AuthProvider = ({ children, persist = true }) => {
     navigate('/login');
   }, [removeToken, navigate]);
 
-  // ✅ Load user if token is valid
+  // ✅ Load user on app mount
   const loadUser = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token || !isTokenValid(token)) {
@@ -79,12 +78,11 @@ export const AuthProvider = ({ children, persist = true }) => {
     }
   }, [setToken, removeToken]);
 
-  // ⏳ Load on component mount
   useEffect(() => {
     loadUser();
   }, [loadUser]);
 
-  // 🔄 Auto logout on token expiry every 60s
+  // ⏳ Token auto-expiry check every 60s
   useEffect(() => {
     const interval = setInterval(() => {
       const token = localStorage.getItem('token');
@@ -99,23 +97,31 @@ export const AuthProvider = ({ children, persist = true }) => {
   const register = async (formData) => {
     try {
       setError(null);
-      const response = await api.post('/auth/register', formData, {
+      const res = await api.post('/auth/register', formData, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      if (response.data.token) {
-        setToken(response.data.token);
-        setUser(response.data.user);
-        navigate('/dashboard');
+      if (res.data.token) {
+        setToken(res.data.token);
+        setUser(res.data.user);
+
+        // ✅ Redirect based on role
+        const role = res.data.user?.role;
+        if (role === 'doctor') {
+          navigate('/doctor/dashboard');
+        } else {
+          navigate('/patient/dashboard');
+        }
+
+        return res.data;
       }
 
-      return response.data;
+      throw new Error(res.data.message || 'Registration failed');
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Registration failed';
+      const errorMsg = err.response?.data?.message || err.message || 'Registration failed';
       setError(errorMsg);
-      console.error('Registration error:', err.response?.data || err.message);
       removeToken();
       throw new Error(errorMsg);
     }
@@ -130,7 +136,15 @@ export const AuthProvider = ({ children, persist = true }) => {
       if (res.data.success && res.data.token) {
         setToken(res.data.token);
         setUser(res.data.user);
-        navigate('/dashboard');
+
+        // ✅ Redirect based on role
+        const role = res.data.user?.role;
+        if (role === 'doctor') {
+          navigate('/doctor/dashboard');
+        } else {
+          navigate('/patient/dashboard');
+        }
+
         return res.data;
       }
 
@@ -176,7 +190,7 @@ export const AuthProvider = ({ children, persist = true }) => {
   );
 };
 
-// ✅ Custom hook for consuming context
+// ✅ Custom hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

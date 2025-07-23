@@ -4,12 +4,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-// ✅ Register
+// Register
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role, phone } = req.body;
 
-    // Validate input
     if (!email || !password || !name || !role) {
       return res.status(400).json({ 
         success: false,
@@ -17,7 +16,6 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Check for existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ 
@@ -26,10 +24,8 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
     const user = await User.create({
       name,
       email,
@@ -38,9 +34,9 @@ router.post('/register', async (req, res) => {
       phone,
     });
 
-    // Generate token
+    // IMPORTANT: wrap user id in "user" object to match middleware
     const token = jwt.sign(
-      { id: user._id },
+      { user: { id: user._id } },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '1h' }
     );
@@ -65,12 +61,11 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// ✅ Login
+// Login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({ 
         success: false,
@@ -94,8 +89,9 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    // IMPORTANT: wrap user id in "user" object to match middleware
     const token = jwt.sign(
-      { id: user._id },
+      { user: { id: user._id } },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '1h' }
     );
@@ -120,7 +116,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ✅ Get current user
+// Get current user
 router.get('/user', async (req, res) => {
   try {
     const token = req.headers['x-auth-token'];
@@ -132,7 +128,7 @@ router.get('/user', async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findById(decoded.user.id).select('-password');
 
     if (!user) {
       return res.status(404).json({ 
