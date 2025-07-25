@@ -6,12 +6,12 @@ import {
   useCallback,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
 import { jwtDecode } from 'jwt-decode';
+import api from '../services/api'; // axios instance with baseURL
 
 const AuthContext = createContext();
 
-// ✅ Utility: Check token validity
+// ✅ Check if the token is valid
 const isTokenValid = (token) => {
   if (!token) return false;
   try {
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children, persist = true }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ Set token globally
+  // ✅ Set token in storage and axios headers
   const setToken = useCallback(
     (token) => {
       if (persist) {
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children, persist = true }) => {
     [persist]
   );
 
-  // ✅ Remove token
+  // ✅ Remove token from storage and axios headers
   const removeToken = useCallback(() => {
     if (persist) {
       localStorage.removeItem('token');
@@ -47,14 +47,14 @@ export const AuthProvider = ({ children, persist = true }) => {
     delete api.defaults.headers.common['x-auth-token'];
   }, [persist]);
 
-  // ✅ Logout
+  // ✅ Logout function
   const logout = useCallback(() => {
     removeToken();
     setUser(null);
     navigate('/login');
   }, [removeToken, navigate]);
 
-  // ✅ Load user on app mount
+  // ✅ Load user if token is valid
   const loadUser = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token || !isTokenValid(token)) {
@@ -78,11 +78,12 @@ export const AuthProvider = ({ children, persist = true }) => {
     }
   }, [setToken, removeToken]);
 
+  // ✅ Load user on mount
   useEffect(() => {
     loadUser();
   }, [loadUser]);
 
-  // ⏳ Token auto-expiry check every 60s
+  // ✅ Auto logout if token expires
   useEffect(() => {
     const interval = setInterval(() => {
       const token = localStorage.getItem('token');
@@ -93,7 +94,7 @@ export const AuthProvider = ({ children, persist = true }) => {
     return () => clearInterval(interval);
   }, [logout]);
 
-  // ✅ Register
+  // ✅ Register function
   const register = async (formData) => {
     try {
       setError(null);
@@ -107,7 +108,6 @@ export const AuthProvider = ({ children, persist = true }) => {
         setToken(res.data.token);
         setUser(res.data.user);
 
-        // ✅ Redirect based on role
         const role = res.data.user?.role;
         if (role === 'doctor') {
           navigate('/doctor/dashboard');
@@ -127,7 +127,7 @@ export const AuthProvider = ({ children, persist = true }) => {
     }
   };
 
-  // ✅ Login
+  // ✅ Login function
   const login = async (formData) => {
     try {
       setError(null);
@@ -137,7 +137,6 @@ export const AuthProvider = ({ children, persist = true }) => {
         setToken(res.data.token);
         setUser(res.data.user);
 
-        // ✅ Redirect based on role
         const role = res.data.user?.role;
         if (role === 'doctor') {
           navigate('/doctor/dashboard');
@@ -157,7 +156,7 @@ export const AuthProvider = ({ children, persist = true }) => {
     }
   };
 
-  // 🔁 Manual user refresh
+  // ✅ Refresh user manually
   const refreshUser = async () => {
     try {
       const res = await api.get('/auth/user');
@@ -190,7 +189,7 @@ export const AuthProvider = ({ children, persist = true }) => {
   );
 };
 
-// ✅ Custom hook
+// ✅ Hook to use Auth Context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

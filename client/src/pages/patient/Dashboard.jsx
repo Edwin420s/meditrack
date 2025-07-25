@@ -63,6 +63,7 @@ const PatientDashboard = () => {
 
       {/* 📄 Main Content */}
       <main className="main-content flex-1 p-6">
+        {/* 🔝 Header */}
         <Header title={`Welcome, ${user?.name || 'Patient'}`} />
 
         {/* 📆 Appointment Booking */}

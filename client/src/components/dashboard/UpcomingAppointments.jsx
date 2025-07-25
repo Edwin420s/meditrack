@@ -9,7 +9,7 @@ export default function UpcomingAppointments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch user-specific appointments
+  // Fetch appointments for the logged-in user
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -18,14 +18,16 @@ export default function UpcomingAppointments() {
         const data = await response.json();
         setAppointments(data);
       } catch (err) {
-        setError('Failed to load appointments.');
         console.error(err);
+        setError('Failed to load appointments.');
       } finally {
         setLoading(false);
       }
     };
 
-    if (user?.id) fetchAppointments();
+    if (user?.id) {
+      fetchAppointments();
+    }
   }, [user]);
 
   const formatDate = (dateString) => {
@@ -41,7 +43,7 @@ export default function UpcomingAppointments() {
 
   if (loading) {
     return (
-      <div className="loading text-center text-gray-600 py-6">
+      <div className="text-center text-gray-600 py-6">
         Loading appointments...
       </div>
     );
@@ -49,46 +51,59 @@ export default function UpcomingAppointments() {
 
   if (error) {
     return (
-      <div className="error-message flex items-center gap-2 text-red-600 py-4">
+      <div className="flex items-center gap-2 text-red-600 py-4">
         <AlertCircle size={18} /> <span>{error}</span>
       </div>
     );
   }
 
   return (
-    <div className="upcoming-appointments-container max-w-3xl mx-auto p-4 bg-white rounded-lg shadow-md">
-      <h3 className="text-xl font-semibold mb-4">Your Upcoming Appointments</h3>
+    <div className="max-w-3xl mx-auto p-4 bg-white rounded-lg shadow-md">
+      <h3 className="text-xl font-semibold mb-4 text-[#111b0e]">
+        Your Upcoming Appointments
+      </h3>
 
       {appointments.length === 0 ? (
-        <div className="no-appointments text-gray-500">
+        <div className="text-gray-500">
           You don’t have any upcoming appointments.
         </div>
       ) : (
-        <div className="appointments-list space-y-4">
+        <div className="space-y-4">
           {appointments.map((appointment) => (
             <div
               key={appointment.id}
-              className="appointment-card p-4 border rounded-lg flex items-start gap-4"
+              className="p-4 border border-gray-200 rounded-lg flex items-start gap-4 bg-[#f9fbf8]"
             >
-              <div className="appointment-icon pt-1">
+              <div className="pt-1">
                 <CheckCircle className="text-green-500" size={24} />
               </div>
 
-              <div className="appointment-details flex-1">
-                <div className="flex items-center text-sm text-gray-700 mb-1">
-                  <Clock size={16} className="mr-1" />
+              <div className="flex-1">
+                <p className="text-[#629550] font-medium">
+                  {appointment.doctor} — {appointment.specialty}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <Calendar size={14} className="inline mr-1" />
+                  {appointment.location}
+                </p>
+                <p className="text-sm text-gray-700 mt-1 flex items-center">
+                  <Clock size={14} className="mr-1" />
                   {formatDate(appointment.date)}
-                </div>
+                </p>
                 {appointment.reason && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 mt-1">
                     <span className="font-medium">Reason:</span> {appointment.reason}
                   </p>
                 )}
               </div>
 
-              <div className="appointment-actions flex flex-col gap-2">
-                <button className="text-sm text-blue-600 hover:underline">Reschedule</button>
-                <button className="text-sm text-red-500 hover:underline">Cancel</button>
+              <div className="flex flex-col items-end gap-1">
+                <button className="text-sm text-blue-600 hover:underline">
+                  Reschedule
+                </button>
+                <button className="text-sm text-red-500 hover:underline">
+                  Cancel
+                </button>
               </div>
             </div>
           ))}

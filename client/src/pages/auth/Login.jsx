@@ -1,3 +1,5 @@
+// client/src/pages/auth/Login.jsx
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -14,39 +16,46 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [e.target.name]: e.target.value
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const response = await login(formData); // Make sure login returns response with token
-      // Save token to localStorage here:
+      const response = await login(formData);
       if (response?.token) {
         localStorage.setItem('token', response.token);
       }
-      navigate('/dashboard');
+
+      // Role-based redirect
+      if (response?.user?.role === 'patient') {
+        navigate('/patient/dashboard');
+      } else if (response?.user?.role === 'doctor') {
+        navigate('/doctor/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
+      console.error('Login failed:', err);
       setError('Invalid credentials. Please try again.');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">MediTrack</h1>
         <h2 className="text-xl text-center text-gray-600 mb-6">Login to your account</h2>
 
         {error && (
-          <div className="mb-4 text-sm text-red-600 text-center">
-            {error}
-          </div>
+          <div className="mb-4 text-sm text-red-600 text-center">{error}</div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <input
@@ -63,7 +72,7 @@ const Login = () => {
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
-              type={showPassword ? "text" : "password"}
+              type={showPassword ? 'text' : 'password'}
               name="password"
               value={formData.password}
               onChange={handleChange}
@@ -73,21 +82,12 @@ const Login = () => {
             />
             <button
               type="button"
-              className="absolute right-3 top-8 text-gray-500 hover:text-gray-700"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-9 text-sm text-gray-500 hover:text-gray-700 focus:outline-none"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? 'Hide' : 'Show'}
             </button>
-          </div>
-
-          <div className="flex justify-end">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-green-600 hover:underline"
-            >
-              Forgot password?
-            </Link>
           </div>
 
           <button
@@ -96,10 +96,16 @@ const Login = () => {
           >
             Login
           </button>
+
+          <div className="text-center mt-3 text-sm">
+            <Link to="/forgot-password" className="text-green-600 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </form>
 
-        <div className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+        <div className="mt-6 text-center text-sm text-gray-600">
+          Don’t have an account?{' '}
           <Link to="/register" className="text-green-600 hover:underline">
             Register
           </Link>

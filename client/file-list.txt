@@ -1,8 +1,0 @@
-C:\Users\edwin\Desktop\meditrack\client\.env.local 
-C:\Users\edwin\Desktop\meditrack\client\.gitignore 
-C:\Users\edwin\Desktop\meditrack\client\file-list.txt 
-C:\Users\edwin\Desktop\meditrack\client\package-lock.json 
-C:\Users\edwin\Desktop\meditrack\client\package.json 
-C:\Users\edwin\Desktop\meditrack\client\postcss.config.js 
-C:\Users\edwin\Desktop\meditrack\client\README.md 
-C:\Users\edwin\Desktop\meditrack\client\tailwind.config.js 
