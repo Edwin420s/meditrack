@@ -9,7 +9,6 @@
 ## 🔗 Live Demo
 
 👉 [Access MediTrack Live](https://meditrack-lac.vercel.app/)  
-(Please allow a few seconds for the backend to spin up on Render.)
 
 ---
 
