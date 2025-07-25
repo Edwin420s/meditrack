@@ -97,9 +97,6 @@ meditrack/
 ├── README.md
 └── package.json
 
-yaml
-Copy
-Edit
 ```
 
 ---
@@ -145,7 +142,7 @@ Run the App
 
 # Terminal 1
 cd client
-npm start
+npm run dev
 
 # Terminal 2
 cd server
